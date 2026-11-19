@@ -170,7 +170,9 @@ function applyData(d){
 }
 applyData(SNAP);
 for(const slug of store.get("vf_extra",[])) if(!streams.has(slug)) streams.set(slug,{slug,name:slug,pic:"",viewers:0,title:"",category:"",live:false,wins:[]});
-let votes=store.get("vf_votes",{});
+let votes=store.get("vf_votes",{});            // my own vote per clip (for the arrow colors)
+let shared={}, sharedOK=false;                   // everyone's votes, from /api/votes
+let voter=store.get("vf_voter",null); if(!voter){voter=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());store.set("vf_voter",voter)}
 let sort="hot", range="all", only=null, hideBots=store.get("vf_hidebots",false), source="snap", updated=SNAP.g;
 
 // ================= helpers =================
@@ -181,7 +183,7 @@ const hrs=iso=>(Date.now()-new Date(iso))/36e5;
 function ago(iso){const m=Math.round(hrs(iso)*60);if(m<1)return"עכשיו";if(m<60)return`לפני ${m} דק׳`;const h=Math.round(m/60);if(h<24)return`לפני ${h} שע׳`;return`לפני ${Math.round(h/24)} ימים`}
 const av=n=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='#1f1a2a'/><text x='20' y='26' font-size='18' text-anchor='middle' fill='#ff3fa4' font-family='sans-serif'>${(n||"?")[0].toUpperCase()}</text></svg>`);
 const isBot=c=>BOTS.has((c.creator||"").toLowerCase());
-const score=c=>(c.likes||0)+(votes[c.id]||0);
+const score=c=>(c.likes||0)+(sharedOK?(shared[c.id]||0):(votes[c.id]||0));
 const hot=c=>Math.log10(1+c.views+3*Math.max(0,score(c)))-hrs(c.at)/10;
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1800)}
 const toIso=s=>/Z$/.test(s)?s:s.replace(" ","T")+"Z";
@@ -299,7 +301,10 @@ function closeClip(){openId=null;const v=$("#vid");v.pause();if(hls){hls.destroy
 // ================= events =================
 document.addEventListener("click",e=>{
   const t=e.target;
-  const vb=t.closest("[data-vote]"); if(vb){const id=vb.closest(".vote").dataset.id,v=+vb.dataset.vote;votes[id]=votes[id]===v?0:v;if(!votes[id])delete votes[id];store.set("vf_votes",votes);return render()}
+  const vb=t.closest("[data-vote]"); if(vb){const id=vb.closest(".vote").dataset.id,v=+vb.dataset.vote,prev=votes[id]||0,nv=prev===v?0:v;
+    if(nv)votes[id]=nv;else delete votes[id];store.set("vf_votes",votes);
+    if(sharedOK){shared[id]=(shared[id]||0)+nv-prev;sendVote(id,nv)}
+    return render()}
   const op=t.closest("[data-open]"); if(op) return openClip(op.dataset.open);
   const sh=t.closest("[data-share]"); if(sh){const u=location.href.split("#")[0]+"#"+sh.dataset.share;navigator.clipboard?.writeText(u).then(()=>toast("הקישור הועתק"),()=>toast(u));return}
   const sr=t.closest("[data-st]"); if(sr){only=only===sr.dataset.st?null:sr.dataset.st;closeClip();window.scrollTo({top:0});return render()}
@@ -326,6 +331,15 @@ $("#addForm").addEventListener("submit",async e=>{
 });
 window.addEventListener("hashchange",()=>{const id=location.hash.slice(1);if(id&&clips.has(id))openClip(id,false)});
 
+// ---- shared votes (Cloudflare Pages Functions + D1) ----
+async function loadVotes(){
+  try{const r=await fetch("/api/votes",{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();shared=j.scores||{};sharedOK=true}catch{}
+}
+async function sendVote(clip,v){
+  try{const r=await fetch("/api/vote",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({clip,voter,v})});
+    if(r.ok){const j=await r.json();shared[clip]=j.score;render()}else toast("ההצבעה לא נשמרה")}
+  catch{toast("ההצבעה לא נשמרה")}
+}
 // Data collected every 15 min by the GitHub Action (data.json), plus the list of known streamers.
 async function loadSiteData(){
   try{const d=await getJSON("data.json");applyData(d);updated=d.g;source="site"}catch{}
@@ -338,8 +352,8 @@ async function loadSiteData(){
 }
 render();
 if(location.hash.length>1&&clips.has(location.hash.slice(1))) openClip(location.hash.slice(1),false);
-loadSiteData().then(()=>{render();return refresh()}).then(()=>{if(location.hash.length>1&&!openId&&clips.has(location.hash.slice(1)))openClip(location.hash.slice(1),false)});
-setInterval(refresh,3*60*1000);
+Promise.all([loadSiteData(),loadVotes()]).then(()=>{render();return refresh()}).then(()=>{if(location.hash.length>1&&!openId&&clips.has(location.hash.slice(1)))openClip(location.hash.slice(1),false)});
+setInterval(()=>loadVotes().then(refresh),3*60*1000);
 </script>
 </body>
 </html>
