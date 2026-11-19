@@ -196,7 +196,8 @@ function keep(c,s){
 }
 
 // ================= Kick =================
-async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()}
+// no-store + cache-buster: otherwise the browser serves an old copy and new clips don't show up
+async function getJSON(u){const r=await fetch(u+(u.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error(r.status);return r.json()}
 async function loadStreamer(slug){
   const ch=await getJSON(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`);
   const ls=ch.livestream;
@@ -328,9 +329,9 @@ window.addEventListener("hashchange",()=>{const id=location.hash.slice(1);if(id&
 
 // Data collected every 15 min by the GitHub Action (data.json), plus the list of known streamers.
 async function loadSiteData(){
-  try{const d=await getJSON("data.json?"+Date.now());applyData(d);updated=d.g;source="site"}catch{}
+  try{const d=await getJSON("data.json");applyData(d);updated=d.g;source="site"}catch{}
   try{
-    const list=await getJSON("streamers.json?"+Date.now()), keepSet=new Set([...list,...store.get("vf_extra",[])]);
+    const list=await getJSON("streamers.json"), keepSet=new Set([...list,...store.get("vf_extra",[])]);
     for(const slug of [...streams.keys()]) if(!keepSet.has(slug)) streams.delete(slug);       // removed by admin
     for(const [id,c] of [...clips]) if(!keepSet.has(c.channel)) clips.delete(id);
     for(const slug of list) if(!streams.has(slug)) streams.set(slug,{slug,name:slug,pic:"",viewers:0,title:"",category:"",live:false,wins:[]});
