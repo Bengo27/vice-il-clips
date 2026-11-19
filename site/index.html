@@ -126,12 +126,16 @@ video{width:100%;display:block;background:#000;max-height:72vh}
     <div class="box"><h3><span class="dot"></span>משחקים עכשיו</h3><div class="bd" id="live"></div></div>
     <div class="box"><h3>🎮 סטרימרים</h3><div class="bd">
       <div id="streamers"></div>
-      <form class="row" id="addForm" style="margin-top:10px">
-        <input class="inp" id="addInput" placeholder="שם ערוץ בקיק" autocomplete="off">
-        <button class="btn" type="submit">הוסף</button>
-      </form>
       <label class="chk"><input type="checkbox" id="hideBots"> הסתר קליפים אוטומטיים של בוטים</label>
-      <div class="note">סטרימר שמשדר עכשיו בעברית ב-GTA 6 נכנס לבד. מי ששיחק קודם וכבר סגר את הלייב, אפשר להוסיף כאן.</div>
+      <div class="note">חסר סטרימר ששיחק GTA 6 בעברית? שלחו את הערוץ ל-<a href="https://kick.com/bengo23" target="_blank" rel="noopener" style="color:var(--pink)">Bengo</a>.</div>
+    </div></div>
+    <div class="box" id="adminBox" style="display:none"><h3>🔧 ניהול</h3><div class="bd">
+      <form class="row" id="addForm">
+        <input class="inp" id="addInput" placeholder="kick.com/..." autocomplete="off">
+        <button class="btn" type="submit">בדוק</button>
+      </form>
+      <div class="note" id="adminMsg">מדביקים קישור לערוץ ובודקים שיש לו קליפים מ-GTA 6.</div>
+      <a class="btn" id="adminGo" href="https://github.com/Bengo27/vice-il-clips/actions/workflows/add-streamer.yml" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:10px">הוסף לכולם ב-GitHub ↗</a>
     </div></div>
   </aside>
 </div>
@@ -307,19 +311,30 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeClip()});
 $("#hideBots").onchange=e=>{hideBots=e.target.checked;store.set("vf_hidebots",hideBots);render()};
+// Admin (open the site with #admin once; remembered on this device)
+if(location.hash==="#admin"){store.set("vf_admin",true);history.replaceState(null,"",location.pathname)}
+if(store.get("vf_admin",false)) $("#adminBox").style.display="";
 $("#addForm").addEventListener("submit",async e=>{
   e.preventDefault();const slug=$("#addInput").value.trim().toLowerCase().replace(/^.*kick\.com\//,"").replace(/[\/?#].*$/,"");
-  if(!slug) return; $("#addInput").value=""; toast("בודק את "+slug+"…");
+  if(!slug) return; $("#adminMsg").textContent="בודק את "+slug+"…";
   try{const s=await loadStreamer(slug);const ex=store.get("vf_extra",[]);if(!ex.includes(s.slug)){ex.push(s.slug);store.set("vf_extra",ex)}
-    source="live";render();const n=[...clips.values()].filter(c=>c.channel===s.slug).length;toast(n?`נוספו ${n} קליפים של ${s.name}`:`${s.name} נוסף, אבל אין לו קליפים מ-GTA 6`)}
-  catch{toast(`לא מצאתי ערוץ בשם "${slug}"`)}
+    source="live";render();const n=[...clips.values()].filter(c=>c.channel===s.slug).length;
+    $("#adminMsg").innerHTML=(n?`✅ <b>${esc(s.name)}</b>: ${n} קליפים מ-GTA 6. עכשיו רק אצלך.`:`⚠️ <b>${esc(s.name)}</b> קיים, אבל אין לו קליפים מ-GTA 6.`)+
+      `<br>כדי שכולם יראו: לחצו למטה ← Run workflow ← הדביקו <b dir="ltr">${esc(s.slug)}</b> ← Run.`;
+    navigator.clipboard?.writeText(s.slug).catch(()=>{})}
+  catch{$("#adminMsg").textContent=`לא מצאתי ערוץ "${slug}". העתיקו את הקישור משורת הכתובת בקיק.`}
 });
 window.addEventListener("hashchange",()=>{const id=location.hash.slice(1);if(id&&clips.has(id))openClip(id,false)});
 
 // Data collected every 15 min by the GitHub Action (data.json), plus the list of known streamers.
 async function loadSiteData(){
   try{const d=await getJSON("data.json?"+Date.now());applyData(d);updated=d.g;source="site"}catch{}
-  try{for(const slug of await getJSON("streamers.json?"+Date.now())) if(!streams.has(slug)) streams.set(slug,{slug,name:slug,pic:"",viewers:0,title:"",category:"",live:false,wins:[]})}catch{}
+  try{
+    const list=await getJSON("streamers.json?"+Date.now()), keepSet=new Set([...list,...store.get("vf_extra",[])]);
+    for(const slug of [...streams.keys()]) if(!keepSet.has(slug)) streams.delete(slug);       // removed by admin
+    for(const [id,c] of [...clips]) if(!keepSet.has(c.channel)) clips.delete(id);
+    for(const slug of list) if(!streams.has(slug)) streams.set(slug,{slug,name:slug,pic:"",viewers:0,title:"",category:"",live:false,wins:[]});
+  }catch{}
 }
 render();
 if(location.hash.length>1&&clips.has(location.hash.slice(1))) openClip(location.hash.slice(1),false);
