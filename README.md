@@ -4,6 +4,8 @@
 
 - `site/` — האתר (GitHub Pages)
 - `site/streamers.json` — רשימת הסטרימרים. מתעדכנת לבד, ואפשר להוסיף שם ידנית
-- `scripts/collect.mjs` — רץ כל 15 דקות ב-GitHub Actions: מוצא סטרימים בעברית ב-GTA 6 ומושך את הקליפים ל-`site/data.json`
+- `scripts/collect.mjs` — סקריפט איסוף (כרגע לא פעיל: קיק חוסם את השרתים של GitHub)
 
-הפעלה: Settings ← Pages ← Source: **GitHub Actions**.
+האתר: https://vice-il-clips.pages.dev (Cloudflare Pages, תיקיית `site`). מתעדכן לבד אחרי כל push.
+
+הוספת סטרימר: Actions ← "הוסף / הסר סטרימר" ← Run workflow.
