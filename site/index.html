@@ -77,6 +77,8 @@ button{font:inherit;color:inherit}
 .lv .t{font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
 .lv .c{margin-inline-start:auto;font-size:12px;color:#ff6b88;font-weight:700;white-space:nowrap}
 .lv.off{opacity:.5}
+.more{display:block;width:100%;background:none;border:0;color:var(--mute);padding:8px 0 2px;cursor:pointer;font-size:12.5px}
+.more:hover{color:var(--text)}
 .sr{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;margin:0 -8px}
 .sr:hover{background:var(--hover)}
 .sr.on{background:rgba(255,63,164,.14)}
@@ -173,6 +175,7 @@ for(const slug of store.get("vf_extra",[])) if(!streams.has(slug)) streams.set(s
 let votes=store.get("vf_votes",{});            // my own vote per clip (for the arrow colors)
 let shared={}, sharedOK=false;                   // everyone's votes, from /api/votes
 let voter=store.get("vf_voter",null); if(!voter){voter=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());store.set("vf_voter",voter)}
+let showAllLive=false, showAllSt=false;
 let sort="hot", range="all", only=null, hideBots=store.get("vf_hidebots",false), source="snap", updated=SNAP.g;
 
 // ================= helpers =================
@@ -267,13 +270,21 @@ function render(){
     </article>`).join("") : `<div class="empty">אין עדיין קליפים כאן. GTA 6 יצא רק עכשיו, תחזרו עוד מעט 🌴</div>`);
 
   const playing=st.filter(s=>s.live&&(s.category===GTA||RX.test(s.title))).sort((a,b)=>b.viewers-a.viewers);
-  $("#live").innerHTML = playing.length? playing.map(s=>`
+  // keep the sidebar short: top 5 live / top 8 streamers, the rest behind "show more"
+  const LIVE_N=5, ST_N=8;
+  const liveShown=showAllLive?playing:playing.slice(0,LIVE_N);
+  $("#live").innerHTML = playing.length? liveShown.map(s=>`
     <a class="lv" href="https://kick.com/${esc(s.slug)}" target="_blank" rel="noopener"><img src="${esc(s.pic||av(s.name))}" alt="">
       <div style="min-width:0"><div class="n">${esc(s.name)}</div><div class="t">${esc(s.title)}</div></div>
-      <span class="c">● ${s.viewers.toLocaleString("he-IL")}</span></a>`).join("") : `<div class="note">אף אחד לא משחק כרגע.</div>`;
+      <span class="c">● ${s.viewers.toLocaleString("he-IL")}</span></a>`).join("") +
+      (playing.length>LIVE_N?`<button class="more" data-more="live">${showAllLive?"הצג פחות ▴":`+ עוד ${playing.length-LIVE_N} בלייב ▾`}</button>`:"")
+    : `<div class="note">אף אחד לא משחק כרגע.</div>`;
 
-  $("#streamers").innerHTML = st.sort((a,b)=>(counts[b.slug]||0)-(counts[a.slug]||0)).map(s=>`
-    <div class="sr ${only===s.slug?"on":""}" data-st="${esc(s.slug)}"><img src="${esc(s.pic||av(s.name))}" alt="">${esc(s.name)}${s.live?` <span class="dot" style="width:6px;height:6px"></span>`:""}<span class="k">${counts[s.slug]||0}</span></div>`).join("");
+  const stSorted=st.sort((a,b)=>(only===b.slug)-(only===a.slug)||(counts[b.slug]||0)-(counts[a.slug]||0));
+  const stShown=showAllSt?stSorted:stSorted.slice(0,ST_N);
+  $("#streamers").innerHTML = stShown.map(s=>`
+    <div class="sr ${only===s.slug?"on":""}" data-st="${esc(s.slug)}"><img src="${esc(s.pic||av(s.name))}" alt="">${esc(s.name)}${s.live?` <span class="dot" style="width:6px;height:6px"></span>`:""}<span class="k">${counts[s.slug]||0}</span></div>`).join("") +
+    (stSorted.length>ST_N?`<button class="more" data-more="st">${showAllSt?"הצג פחות ▴":`+ עוד ${stSorted.length-ST_N} סטרימרים ▾`}</button>`:"");
 
   $("#status").innerHTML = source==="live"?`🟢 חי מקיק · ${clips.size} קליפים · ${streams.size} סטרימרים`:`${source==="site"?"🟢 עודכן":"📦 תמונת מצב"} · ${new Date(updated).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}`;
   $("#hideBots").checked=hideBots;
@@ -301,6 +312,7 @@ function closeClip(){openId=null;const v=$("#vid");v.pause();if(hls){hls.destroy
 // ================= events =================
 document.addEventListener("click",e=>{
   const t=e.target;
+  const mb=t.closest("[data-more]"); if(mb){if(mb.dataset.more==="live")showAllLive=!showAllLive;else showAllSt=!showAllSt;return render()}
   const vb=t.closest("[data-vote]"); if(vb){const id=vb.closest(".vote").dataset.id,v=+vb.dataset.vote,prev=votes[id]||0,nv=prev===v?0:v;
     if(nv)votes[id]=nv;else delete votes[id];store.set("vf_votes",votes);
     if(sharedOK){shared[id]=(shared[id]||0)+nv-prev;sendVote(id,nv)}
