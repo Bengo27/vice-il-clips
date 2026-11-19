@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VICE IL CLIPS · הקליפים של GTA 6 מהסטרימרים הישראלים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<style>
+:root{
+  --bg:#0e0b14; --card:#17131f; --card2:#1f1a2a; --line:#2c2539; --hover:#231d31;
+  --pink:#ff3fa4; --orange:#ff8a3d; --up:#ff6a3d; --down:#7c8cff; --cyan:#3ee6ff;
+  --text:#ece6f5; --mute:#9488a8; --grad:linear-gradient(100deg,#ff3fa4,#ff8a3d);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Rubik,system-ui,sans-serif;font-size:14px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:rgba(14,11,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1180px;margin:0 auto;padding:0 16px;height:56px;display:flex;align-items:center;gap:18px}
+.logo{font-weight:900;font-size:22px;letter-spacing:-.5px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.logo .v{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .il{font-size:11px;font-weight:700;border:1px solid var(--cyan);color:var(--cyan);padding:2px 6px;border-radius:5px}
+.tabs{display:flex;gap:4px}
+.tabs button{background:none;border:0;padding:8px 14px;border-radius:99px;color:var(--mute);cursor:pointer;font-weight:500}
+.tabs button:hover{background:var(--hover);color:var(--text)}
+.tabs button.on{background:var(--card2);color:var(--text)}
+.range{display:none;gap:4px}
+.range.show{display:flex}
+.range button{background:none;border:1px solid var(--line);border-radius:99px;padding:5px 11px;color:var(--mute);cursor:pointer;font-size:12.5px}
+.range button.on{border-color:var(--pink);color:var(--text)}
+.status{margin-inline-start:auto;font-size:12px;color:var(--mute);white-space:nowrap}
+/* layout */
+.page{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:1fr 310px;gap:20px}
+@media(max-width:900px){.page{grid-template-columns:1fr}.side{order:-1}.tabs button{padding:8px 10px}.status{display:none}}
+/* feed */
+.post{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;transition:border-color .12s}
+.post:hover{border-color:#4a3d62}
+.vote{display:flex;flex-direction:column;align-items:center;width:42px;flex:none;padding-top:2px}
+.vote button{background:none;border:0;cursor:pointer;color:var(--mute);font-size:18px;line-height:1;padding:3px 6px;border-radius:4px}
+.vote button:hover{background:var(--hover)}
+.vote .sc{font-weight:700;font-size:13px;margin:2px 0}
+.vote.up .u,.vote.up .sc{color:var(--up)} .vote.down .d,.vote.down .sc{color:var(--down)}
+.th{position:relative;width:176px;flex:none;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--card2);cursor:pointer}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th .du{position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.8);font-size:11px;font-weight:700;padding:1px 5px;border-radius:4px}
+.th .pl{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);opacity:0;transition:.12s;font-size:26px}
+.th:hover .pl{opacity:1}
+.body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.title{font-size:16px;font-weight:700;line-height:1.3;cursor:pointer;word-break:break-word}
+.title:hover{text-decoration:underline}
+.flair{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(255,63,164,.16);color:var(--pink);vertical-align:2px;margin-inline-start:6px}
+.flair.bot{background:rgba(148,136,168,.15);color:var(--mute)}
+.meta{color:var(--mute);font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.meta .st{color:var(--text);font-weight:500;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.meta .st img{width:18px;height:18px;border-radius:50%;object-fit:cover}
+.acts{display:flex;gap:4px;margin-top:auto}
+.acts button,.acts a{background:none;border:0;color:var(--mute);font-size:12.5px;font-weight:500;padding:5px 8px;border-radius:4px;cursor:pointer}
+.acts button:hover,.acts a:hover{background:var(--hover);color:var(--text)}
+@media(max-width:600px){.post{flex-wrap:wrap}.th{width:100%;order:-1}.vote{flex-direction:row;width:auto;gap:4px}.body{flex-basis:calc(100% - 100px)}}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:8px;padding:40px;text-align:center;color:var(--mute)}
+/* sidebar */
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.box h3{margin:0;padding:11px 14px;font-size:13px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.box .bd{padding:10px 14px}
+.hero{background:linear-gradient(135deg,#3a0f3a,#2a0f20 50%,#1b0f2a);padding:16px 14px}
+.hero b{font-size:16px}
+.hero p{margin:6px 0 0;color:#d6c6e8;font-size:13px;line-height:1.5}
+.dot{width:8px;height:8px;border-radius:50%;background:#ff2d55;box-shadow:0 0 8px #ff2d55;animation:p 1.4s infinite}
+@keyframes p{50%{opacity:.3}}
+.lv{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line)}
+.lv:last-child{border:0}
+.lv img{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none}
+.lv .n{font-weight:500}
+.lv .t{font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.lv .c{margin-inline-start:auto;font-size:12px;color:#ff6b88;font-weight:700;white-space:nowrap}
+.lv.off{opacity:.5}
+.sr{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;margin:0 -8px}
+.sr:hover{background:var(--hover)}
+.sr.on{background:rgba(255,63,164,.14)}
+.sr img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.sr .k{margin-inline-start:auto;color:var(--mute);font-size:12px}
+.row{display:flex;gap:6px}
+.inp{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 10px;font:inherit;direction:ltr;text-align:right}
+.btn{background:var(--grad);border:0;border-radius:6px;padding:8px 12px;font-weight:700;color:#1a0b14;cursor:pointer;white-space:nowrap}
+.chk{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--mute);font-size:13px;margin-top:10px}
+.note{font-size:12px;color:var(--mute);margin-top:8px;line-height:1.5}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(4,2,8,.88);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
+.modal.on{display:flex}
+.mbox{width:min(980px,100%);background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mhead{display:flex;gap:12px;padding:14px;align-items:flex-start}
+.mhead .title{font-size:19px;cursor:default}
+.mhead .title:hover{text-decoration:none}
+.x{background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:var(--mute);margin-inline-start:auto}
+video{width:100%;display:block;background:#000;max-height:72vh}
+.mfoot{display:flex;gap:6px;padding:10px 14px;align-items:center;flex-wrap:wrap}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);padding:9px 16px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;z-index:60}
+.toast.on{opacity:1}
+.spin{display:inline-block;width:10px;height:10px;border:2px solid var(--mute);border-top-color:var(--pink);border-radius:50%;animation:r .8s linear infinite;vertical-align:-1px}
+@keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <div class="logo" id="home"><span class="v">VICE</span><span class="il">IL</span><span class="v">CLIPS</span></div>
+  <div class="tabs" id="tabs">
+    <button data-v="hot" class="on">🔥 חם</button>
+    <button data-v="new">🆕 חדש</button>
+    <button data-v="top">🏆 טופ</button>
+  </div>
+  <div class="range" id="range">
+    <button data-v="24">היום</button>
+    <button data-v="all" class="on">מאז ההשקה</button>
+  </div>
+  <div class="status" id="status"></div>
+</div></div>
+
+<div class="page">
+  <main id="feed"></main>
+  <aside class="side">
+    <div class="box"><div class="hero"><b>הקליפים של GTA 6 מהסטרימרים הישראלים 🌴</b>
+      <p>כל הקליפים מהלייבים בעברית בקיק מאז ההשקה, במקום אחד. מצביעים, והטובים עולים למעלה.</p></div></div>
+    <div class="box"><h3><span class="dot"></span>משחקים עכשיו</h3><div class="bd" id="live"></div></div>
+    <div class="box"><h3>🎮 סטרימרים</h3><div class="bd">
+      <div id="streamers"></div>
+      <form class="row" id="addForm" style="margin-top:10px">
+        <input class="inp" id="addInput" placeholder="שם ערוץ בקיק" autocomplete="off">
+        <button class="btn" type="submit">הוסף</button>
+      </form>
+      <label class="chk"><input type="checkbox" id="hideBots"> הסתר קליפים אוטומטיים של בוטים</label>
+      <div class="note">סטרימר שמשדר עכשיו בעברית ב-GTA 6 נכנס לבד. מי ששיחק קודם וכבר סגר את הלייב, אפשר להוסיף כאן.</div>
+    </div></div>
+  </aside>
+</div>
+
+<div class="modal" id="modal"><div class="mbox">
+  <div class="mhead">
+    <div class="vote" id="mVote"></div>
+    <div class="body"><div class="title" id="mTitle"></div><div class="meta" id="mMeta"></div></div>
+    <button class="x" id="mClose" aria-label="סגור">×</button>
+  </div>
+  <video id="vid" controls playsinline></video>
+  <div class="mfoot acts" id="mActs"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ================= config =================
+const GTA="grand-theft-auto-vi";
+const LAUNCH="2026-11-18T11:00:00Z";             // GTA 6 midnight launch, first time zone
+const RX=/gta\s*(6|vi)|גי\s*טי\s*אי|ג['׳]?יטיא?י|גיטאי|גטא/i;
+const BOTS=new Set(["botrix","kickbot","botrixoficial"]);
+const PIC="https://files.kick.com/images/user/";
+
+// Snapshot collected from Kick: Hebrew-language channels that streamed GTA 6 since launch
+const SNAP={"g":"2026-11-19T09:45:00Z","s":[["masterohad","MasterOhad","106428006/profile_image/conversion/95b9df08-1eed-4d04-8430-69ca8783f22f-medium.webp",237,"לייב מאסטרטון לא סוגר את הלייב עד שמסיים ג'יטיאי 6 יום 2 + כל תרומה אתגר + כל שעה הגרלה😈","just-chatting",[["2026-11-18T17:36:48Z","2026-11-19T09:30:02Z"]]],["realbigiii","REALBIGIII","21171456/profile_image/conversion/16947aad-8a0a-4b92-a684-02075e7bd720-medium.webp",194,"🛑 מרתון גי טי אי 6 הלייב לא נסגר עד שמסיימים את המשחק 🛑","grand-theft-auto-vi",[["2026-11-19T00:23:50Z","2026-11-19T09:30:03Z"]]],["pedrofederer","PedroFederer","8692852/profile_image/conversion/137137fa-598b-4e17-bbf2-607fa7c91b09-medium.webp",170,"לייב ניקיתון התחלנו יום ראשון || גיטאי 6 על סוני חמש פרו הכי טוב בארץ !!","just-sleeping",[["2026-11-18T20:10:49Z","2026-11-19T09:30:03Z"]]],["noamworld","NoamWorld","102152515/profile_image/conversion/608e69ac-2d64-4d19-b8b5-916b5a141f9c-medium.webp",25,"חיכיתי 13 שנים לרגע הזה | GTA VI | תגיעו בהמוניכם","grand-theft-auto-vi",[["2026-11-18T23:15:44Z","2026-11-19T09:30:04Z"],["2026-11-18T19:02:10Z","2026-11-18T23:15:25Z"]]],["justr0ni","JustR0ni","1000041772/profile_image/conversion/58f57439-a729-4223-bc72-0b80182c0b18-medium.webp",6,"Grand Theft Auto VI - לייב ספיישל 24 שעות","grand-theft-auto-vi",[["2026-11-19T05:03:51Z","2026-11-19T09:30:04Z"]]],["azulayz","Azulayz","3597025/profile_image/conversion/9f85f934-04c2-4e56-b0cd-b394f315bc88-medium.webp",2,"Gta 6 | גיטיאיי 6 !!","grand-theft-auto-vi",[["2026-11-19T08:17:57Z","2026-11-19T09:30:04Z"],["2026-11-18T21:44:28Z","2026-11-18T23:28:39Z"]]],["dongelgames","dongelgames","47494451/profile_image/conversion/b317ce92-aecc-486e-aa70-28d2fb27a842-medium.webp",2,"מי שלא בא לראות טיפשGTA6 הגיע הזמן ל","grand-theft-auto-vi",[["2026-11-19T07:15:29Z","2026-11-19T09:30:05Z"]]],["golanone","GolanOne","79039818/profile_image/conversion/2160e984-d37e-4898-a05c-e2faf44bbe69-medium.webp",1,"Golan","grand-theft-auto-vi",[["2026-11-19T07:34:55Z","2026-11-19T09:30:05Z"]]],["ohana-the-g","OHANA_THE_G","28030331/profile_image/conversion/6e6e64c8-6017-46b6-9db9-4b7192f6c26f-medium.webp",1,"GTA  6 PS5  PRO!","grand-theft-auto-v",[["2026-11-19T05:42:23Z","2026-11-19T09:30:06Z"],["2026-11-18T16:03:46Z","2026-11-18T16:23:14Z"]]],["hoteclipse","HotEclipse","127229820/profile_image/conversion/f544e2c0-6ec9-4d9e-a8c4-a2c5f266061c-medium.webp",1,"משחק GTA 6 בפעם הראשונה 24/7 עד שמסיים","grand-theft-auto-vi",[["2026-11-19T00:43:16Z","2026-11-19T09:30:06Z"]]],["zarzif","ZARZIF","88714294/profile_image/conversion/0be136ce-3c5d-4ada-b4c5-f2575d7913b5-medium.webp",1,"היידה GTA 6 אורח מיוחד יש היום","grand-theft-auto-vi",[["2026-11-18T21:59:14Z","2026-11-19T09:30:07Z"]]],["igz","IGZ_","3691093/profile_image/conversion/4b431c9e-8569-430c-9e64-5b497bc5ca1c-fullsize.webp",0,"","",[["2026-11-18T10:02:22Z","2026-11-18T22:38:02Z"]]],["ronengg","RonenGG","4955749/profile_image/conversion/e1ea0779-a7db-4f16-828a-e7e4e00d5be3-fullsize.webp",0,"","",[["2026-11-18T14:25:03Z","2026-11-18T23:55:16Z"]]],["frenzyfishy","FrenzyFishy","66260675/profile_image/conversion/c94238fb-6ed6-4649-b7bc-da24f4720902-fullsize.webp",0,"","",[["2026-11-18T18:15:06Z","2026-11-19T02:59:31Z"],["2026-11-18T16:24:59Z","2026-11-18T18:07:37Z"]]],["senseifr","SenseiFR","5984097/profile_image/conversion/7ba1ef73-b33b-478f-bce1-d797588cb61c-fullsize.webp",0,"","",[["2026-11-18T17:42:12Z","2026-11-19T01:46:00Z"]]],["karol-lenses","karol_lenses","85920782/profile_image/conversion/fd67f71d-9eea-4e8b-9428-92d5a9351f55-fullsize.webp",0,"","",[["2026-11-18T19:14:13Z","2026-11-19T03:46:48Z"]]]],"c":[["clip_01M7R08XAPVA3YNYZ8195MTZ2S","היי 8:00",0,30,"2026-11-18T18:56:50Z","masterohad","67660","just-chatting","73"],["clip_01M7QWWR4MMJSY90YMVMVFDPT5","damm",0,17,"2026-11-18T17:57:52Z","masterohad","Yonatan_778","just-chatting","0c"],["clip_01M7SH0AF9WD1F74R0B1N3MW2K","ניגי",3,21,"2026-11-19T09:09:01Z","realbigiii","sabashelberi","grand-theft-auto-vi","10"],["clip_01M7SGY4FH1CQ4GQ74VYS2ZB3T","מרתון גי טי אי 6 הלייב לא נסגר עד | Clip",5,30,"2026-11-19T09:06:54Z","realbigiii","BotRix","grand-theft-auto-vi","09"],["clip_01M7S4ZTVD4DQHA651Q3FXEXT2","מרתון גי טי אי 6 הלייב לא נסגר עד | Clip",4,30,"2026-11-19T05:38:07Z","realbigiii","BotRix","grand-theft-auto-vi","83"],["clip_01M7SG2Q98SXCDACWZDA17X6JV","לייב ניקיתון התחלנו יום ראשון גיט | Clip",5,30,"2026-11-19T08:51:56Z","pedrofederer","BotRix","just-sleeping","f6"],["clip_01M7S4CZ89KFKGWFRDHRH6K3RE","כמה כיף שאני בסיאס ושומע את זה אני דורש פיצויים",2,20,"2026-11-19T05:29:02Z","pedrofederer","TrizZz43","just-sleeping","93"],["clip_01M7S4637K19PY7JGN3WR2VNJT","כמה כיף לשומע את זה שאתה נגד מישהו בCS",5,20,"2026-11-19T05:27:20Z","pedrofederer","TrizZz43","just-sleeping","ef"],["clip_01M7RYA8DYVRVP5RN5DCMAVX9H","לייב ניקיתון התחלנו יום ראשון גיט | Clip",1,30,"2026-11-19T03:41:28Z","pedrofederer","BotRix","just-sleeping","d9"],["clip_01M7RY36DWGKMMJW7G0MG96S73","לייב ניקיתון התחלנו יום ראשון גיט | Clip",1,30,"2026-11-19T03:37:37Z","pedrofederer","BotRix","just-sleeping","27"],["clip_01M7RXYA7G22JF58G18EN66D9J","לייב ניקיתון התחלנו יום ראשון גיט | Clip",4,30,"2026-11-19T03:34:57Z","pedrofederer","BotRix","just-sleeping","4e"],["clip_01M7RDDV092XK21AK0RG4ZW3A0","ממש נהג שודים",5,13,"2026-11-18T22:47:32Z","pedrofederer","BeNTSii","just-sleeping","b0"],["clip_01M7R8K5Y92GXWYF2FNFXEN1WF","שבר דמות",2,30,"2026-11-18T21:22:23Z","pedrofederer","Laviehoyo","just-sleeping","16"],["clip_01M7R6PQFJR6N37XVSXMKHXQEH","לייב ניקיתון התחלנו יום ראשון || גיטאי 6 על סונ...",0,30,"2026-11-18T20:48:52Z","pedrofederer","Laviehoyo","just-sleeping","d4"],["clip_01M7R7NH7791EVH9PEZX1CAXPG","נועם מגמגם",4,18,"2026-11-18T21:06:05Z","noamworld","BobVQ","grand-theft-auto-vi","b1"],["clip_01M7R7N8J5Q7HY2VF1EFQ7NV2Q","חיכיתי 13 שנים לרגע הזה GTA VI תג | Clip",0,60,"2026-11-18T21:05:32Z","noamworld","BotRix","grand-theft-auto-vi","20"],["clip_01M7R4BSS1PTG19DCBEB6VV8Y3","חיכיתי 13 שנים לרגע הזה GTA VI תג | Clip",0,30,"2026-11-18T20:07:56Z","noamworld","BotRix","grand-theft-auto-vi","f4"],["clip_01M7R8JXS3HBTD2C3GHRTNERFC","השואה 2012",0,10,"2026-11-18T21:22:15Z","ronengg","gavriel_4","grand-theft-auto-vi","75"],["clip_01M7R836HCCT5JYBGVXH57RMJV","אדולנעה",2,30,"2026-11-18T21:13:17Z","ronengg","Liad1010","grand-theft-auto-vi","01"],["clip_01M7R3GHT83AHRAD1HSRJYZ1JZ","רונן נלחם בייתוש",12,20,"2026-11-18T19:53:04Z","ronengg","Zippo_8","grand-theft-auto-vi","c0"],["clip_01M7R3D7AHM5EYWJ2VW9X6B28Y","דניה",0,180,"2026-11-18T19:51:25Z","ronengg","Niros_0","grand-theft-auto-vi","8b"],["clip_01M7QTMBW1WJBTBM51ZWS16G1K","לייב מהחדר החדש בקפריסין! משחקים גטא 6 ב12 בליל...",1,10,"2026-11-18T17:17:52Z","ronengg","Dor121","grand-theft-auto-vi","70"],["clip_01M7RCCN76ZMPZFPEYBVW4RN5E","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",3,30,"2026-11-18T22:28:13Z","igz","BotRix","just-chatting","4d"],["clip_01M7RBAS05N6KFYNTWGSYVP12C","RIE MONEY",6,30,"2026-11-18T22:10:15Z","igz","vegeta1242352","just-chatting","a7"],["clip_01M7R9NZ47DM5BA98H78Y98XX8","ג",3,30,"2026-11-18T21:40:55Z","igz","danny_xx1","just-chatting","ae"],["clip_01M7R9JP9DW8MWY9ASBDR6VM6F","סתמי תפה",6,30,"2026-11-18T21:39:13Z","igz","vegeta1242352","just-chatting","63"],["clip_01M7R9G7JN6G198NJ2RPFFKJP8","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",3,30,"2026-11-18T21:37:44Z","igz","BotRix","just-chatting","a9"],["clip_01M7R9G1HZP7CDVVNN3W70Q925","סבתא פרימיום",6,34,"2026-11-18T21:37:46Z","igz","vegeta1242352","just-chatting","34"],["clip_01M7R9C1W8RXDSVZQFPDPYQ53A","אופס",1,21,"2026-11-18T21:35:47Z","igz","vegeta1242352","just-chatting","b2"],["clip_01M7R9BK7PDEK89G9EV6A8MG9Z","ג",2,30,"2026-11-18T21:35:17Z","igz","danny_xx1","just-chatting","6f"],["clip_01M7R7X9VQMKWCGY4ZJPE6T5NC","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",3,30,"2026-11-18T21:09:55Z","igz","BotRix","just-chatting","48"],["clip_01M7R75WH08PZTMM897HDPSCCE","ילד על גלגלי עזר",15,67,"2026-11-18T20:57:53Z","igz","vegeta1242352","just-chatting","69"],["clip_01M7R6YG0DS9EBWHWHV8D8HVX2","שטן",5,38,"2026-11-18T20:53:14Z","igz","vegeta1242352","just-chatting","cb"],["clip_01M7R1EK026GKH0HPN3THBZA24","ג'סי פינקמן עם פינק בסוף",2,30,"2026-11-18T19:17:09Z","igz","vegeta1242352","just-chatting","fb"],["clip_01M7QYMQXX8J2ACXXNSH8GDSW3","י",9,180,"2026-11-18T18:28:08Z","igz","Exotic_Butters1","just-chatting","f7"],["clip_01M7QXNEJ83NEPR8V524EBEGFA","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",1,30,"2026-11-18T18:10:53Z","igz","BotRix","just-chatting","36"],["clip_01M7QTHKVF19TKYNFDMAPJQ48R","ביגפוט חיי בתוך הלב",6,81,"2026-11-18T17:17:04Z","igz","vegeta1242352","just-chatting","1a"],["clip_01M7QTEMEZJYW6190TD6YJD204","ביגפוט!",1,21,"2026-11-18T17:15:05Z","igz","Exotic_Butters1","just-chatting","3a"],["clip_01M7QGZPQVBXY11R7R9SATRT33","גלאפגוס",5,30,"2026-11-18T14:29:21Z","igz","vegeta1242352","just-chatting","90"],["clip_01M7QGZP3MP85XW3ZVD0NMB8C2","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",5,30,"2026-11-18T14:29:16Z","igz","BotRix","just-chatting","30"],["clip_01M7QGAGVV8AMGMXANMFZDYPYN","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",3,30,"2026-11-18T14:17:43Z","igz","BotRix","just-chatting","60"],["clip_01M7QCJVE4S63ZX6SV0AVNHZ9B","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",2,30,"2026-11-18T13:12:22Z","igz","BotRix","just-chatting","e8"],["clip_01M7QC4BPX8D1E99HG5Q72D5JN","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",0,30,"2026-11-18T13:04:27Z","igz","BotRix","just-chatting","80"],["clip_01M7Q7NA35FQ3983P735JWKF5W","משחק ג'יטיאיי 6 לפני כווווווולםםם | Clip",8,30,"2026-11-18T11:46:19Z","igz","BotRix","just-chatting","6c"],["clip_01M7QST0VF7CCFMSWYR0TS895T","הי",2,180,"2026-11-18T17:03:31Z","frenzyfishy","noam_jan4","rob-run","97"],["clip_01M7RP3DF4S9Y82KR4FTF7WS6G","אנשים ברחוב",1,30,"2026-11-19T01:18:07Z","senseifr","dahod4","grand-theft-auto-vi","e1"],["clip_01M7RJTNPH6WAETKBBE9RM0ACR","עוד אחד",1,96,"2026-11-19T00:21:22Z","senseifr","dahod4","grand-theft-auto-vi","6e"],["clip_01M7RJ5J1HQ3FGXMXY0YXB5FYQ","שיכור",1,62,"2026-11-19T00:09:33Z","senseifr","dahod4","grand-theft-auto-vi","b8"],["clip_01M7RJ0D9D56JT58GB21SCXW23","סנסי מסמיק",0,30,"2026-11-19T00:07:30Z","senseifr","Gagimen","grand-theft-auto-vi","df"],["clip_01M7RHYGW8XMHJ26DGXB109VQ1","אין כותרת זה הזוי",1,60,"2026-11-19T00:05:48Z","senseifr","dahod4","grand-theft-auto-vi","cb"],["clip_01M7RHTE2RG96GMPKHSGXGSETM","כיור",1,30,"2026-11-19T00:03:15Z","senseifr","dahod4","grand-theft-auto-vi","7d"],["clip_01M7RGGFW7FTP493ZCW5MWRMP6","פייל",1,30,"2026-11-18T23:40:18Z","senseifr","dahod4","grand-theft-auto-vi","d1"],["clip_01M7RF0K2SV1ZT0PMDM0WBE6CF","נבוט לראש",1,30,"2026-11-18T23:14:15Z","senseifr","dahod4","grand-theft-auto-vi","29"],["clip_01M7RETRG9WTMZD8S7TNSX3AXK","תביא בגדים",3,30,"2026-11-18T23:11:05Z","senseifr","dahod4","grand-theft-auto-vi","82"],["clip_01M7REQ08KCX0ACWCJ2HYY7EQ1","נהג שודים",1,60,"2026-11-18T23:09:13Z","senseifr","dahod4","grand-theft-auto-vi","bc"],["clip_01M7REGAS5J576K9GMT3GVREHC","לבאגדג'",1,16,"2026-11-18T23:05:36Z","senseifr","dahod4","grand-theft-auto-vi","58"],["clip_01M7REEYGDDHRWE8T9CD6DBDV4","מכותתתתתת",3,37,"2026-11-18T23:04:46Z","senseifr","dahod4","grand-theft-auto-vi","0e"],["clip_01M7RE8ZA5HB73EB6D1W4J169H","מפה",3,30,"2026-11-18T23:01:18Z","senseifr","dahod4","grand-theft-auto-vi","e2"],["clip_01M7RE42GEVQRE6C52CY3ACEZQ","מקלחת",3,73,"2026-11-18T22:58:54Z","senseifr","dahod4","grand-theft-auto-vi","b2"],["clip_01M7RDYQ16FBME47AVM4T293NH","הודעות בשלט",2,36,"2026-11-18T22:55:49Z","senseifr","dahod4","grand-theft-auto-vi","a8"],["clip_01M7RDWY383HBHQ4KJXYP9QJEM","כאפה",3,30,"2026-11-18T22:54:47Z","senseifr","dahod4","grand-theft-auto-vi","8e"],["clip_01M7RDRETQVNA1QJNEEAREZ6YZ","טלוויזיה",1,30,"2026-11-18T22:52:21Z","senseifr","dahod4","grand-theft-auto-vi","0d"],["clip_01M7RDDT578DB9WYG56JSF3XSK","שיחה מהשלט",2,40,"2026-11-18T22:46:48Z","senseifr","dahod4","grand-theft-auto-vi","c3"],["clip_01M7RDBBTWZCD1A6MBM70DQNX8","נהיגה ראשונה",1,30,"2026-11-18T22:45:20Z","senseifr","dahod4","grand-theft-auto-vi","33"],["clip_01M7RCSSDBH7J5KEGE8HDGT4VD","נפילה מסירה",3,30,"2026-11-18T22:36:08Z","senseifr","dahod4","grand-theft-auto-vi","56"],["clip_01M7RBXY1N6S4TMR49KH7F0FX8","F",1,30,"2026-11-18T22:20:24Z","senseifr","Xrop4","grand-theft-auto-vi","fa"],["clip_01M7RBEG6FZ9RQPK7FDGG395ZR","FPS",4,39,"2026-11-18T22:12:42Z","senseifr","dahod4","grand-theft-auto-vi","c6"],["clip_01M7RBCC323SD0RH784AN5ZXVB","D",1,64,"2026-11-18T22:10:47Z","senseifr","Xrop4","grand-theft-auto-vi","fe"],["clip_01M7RATA006ZKAHNSVC9W56X9X","כ",3,42,"2026-11-18T22:00:59Z","senseifr","Xrop4","grand-theft-auto-vi","47"],["clip_01M7R422TJXPCMNDEWDZGEZ0N0","CCCCCCCCC",1,29,"2026-11-18T20:02:52Z","senseifr","Xrop4","grand-theft-auto-vi","40"],["clip_01M7S086BG4CKCDG8T9SWV5YEB","משטרת הכלבים",0,62,"2026-11-19T04:20:30Z","karol-lenses","karol_lenses","grand-theft-auto-vi","0e"]]};
+
+// ================= state =================
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const streams=new Map(), clips=new Map();
+function applyData(d){
+  for(const [slug,name,pic,viewers,title,category,wins,live] of d.s) streams.set(slug,{slug,name,pic:pic?(pic.startsWith("http")?pic:PIC+pic):"",viewers,title,category,live:live??viewers>0,wins});
+  for(const [id,title,views,dur,at,channel,creator,cat,p] of d.c){const b=`https://clips.kick.com/clips/${p}/${id}/`;clips.set(id,{id,title,views,dur,at,channel,creator,cat,likes:0,thumb:b+"thumbnail.webp",video:b+"playlist.m3u8"})}
+}
+applyData(SNAP);
+for(const slug of store.get("vf_extra",[])) if(!streams.has(slug)) streams.set(slug,{slug,name:slug,pic:"",viewers:0,title:"",category:"",live:false,wins:[]});
+let votes=store.get("vf_votes",{});
+let sort="hot", range="all", only=null, hideBots=store.get("vf_hidebots",false), source="snap", updated=SNAP.g;
+
+// ================= helpers =================
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const fmtDur=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+const hrs=iso=>(Date.now()-new Date(iso))/36e5;
+function ago(iso){const m=Math.round(hrs(iso)*60);if(m<1)return"עכשיו";if(m<60)return`לפני ${m} דק׳`;const h=Math.round(m/60);if(h<24)return`לפני ${h} שע׳`;return`לפני ${Math.round(h/24)} ימים`}
+const av=n=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='#1f1a2a'/><text x='20' y='26' font-size='18' text-anchor='middle' fill='#ff3fa4' font-family='sans-serif'>${(n||"?")[0].toUpperCase()}</text></svg>`);
+const isBot=c=>BOTS.has((c.creator||"").toLowerCase());
+const score=c=>(c.likes||0)+(votes[c.id]||0);
+const hot=c=>Math.log10(1+c.views+3*Math.max(0,score(c)))-hrs(c.at)/10;
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1800)}
+const toIso=s=>/Z$/.test(s)?s:s.replace(" ","T")+"Z";
+
+// A clip counts if it is tagged GTA VI, or was made during a stream that was GTA VI
+// (by category or by its title) — catches streamers who play under the wrong category.
+function keep(c,s){
+  if(c.at<LAUNCH) return false;
+  if(c.cat===GTA) return true;
+  return (s?.wins||[]).some(([a,b])=>c.at>=a&&c.at<=b);
+}
+
+// ================= Kick =================
+async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()}
+async function loadStreamer(slug){
+  const ch=await getJSON(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`);
+  const ls=ch.livestream;
+  let vids=[];try{const v=await getJSON(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}/videos`);vids=Array.isArray(v)?v:(v.data||[])}catch{}
+  const now=new Date().toISOString();
+  const wins=vids.map(v=>{const a=toIso(v.start_time);const b=(v.is_live||!v.duration)?now:new Date(new Date(a).getTime()+v.duration).toISOString();
+    return {a,b,g:(v.categories||[]).some(x=>x.slug===GTA)||RX.test(v.session_title||"")}}).filter(w=>w.g&&w.b>=LAUNCH).map(w=>[w.a,w.b]);
+  const s={slug:ch.slug,name:ch.user?.username||ch.slug,pic:ch.user?.profile_pic||"",live:!!ls?.is_live,viewers:ls?.viewer_count||0,
+    title:ls?.session_title||"",category:ls?.categories?.[0]?.slug||"",wins};
+  streams.set(s.slug,s);
+  let cursor=null;
+  for(let p=0;p<6;p++){
+    const j=await getJSON(`https://kick.com/api/v2/channels/${encodeURIComponent(s.slug)}/clips?sort=date&time=all`+(cursor?`&cursor=${encodeURIComponent(cursor)}`:"")).catch(()=>null);
+    if(!j) break; let old=false;
+    for(const c of j.clips||[]){
+      if(c.created_at<LAUNCH){old=true;continue}
+      const o={id:c.id,title:(c.title||"").trim(),views:c.view_count||0,likes:c.likes_count||0,dur:c.duration||0,at:c.created_at,channel:s.slug,creator:c.creator?.username,cat:c.category?.slug,thumb:c.thumbnail_url,video:c.video_url};
+      if(keep(o,s)) clips.set(o.id,o);
+    }
+    if(old||!j.nextCursor) break; cursor=j.nextCursor;
+  }
+  return s;
+}
+// Discover Hebrew streams live right now (works only where Kick allows it; ignored otherwise)
+async function discover(){
+  try{const j=await getJSON("https://web.kick.com/api/v1/livestreams?limit=100&sort=viewer_count_desc&language=he");
+    for(const l of j.data.livestreams) if(!streams.has(l.channel.slug)&&(l.category?.slug===GTA||RX.test(l.title)))
+      streams.set(l.channel.slug,{slug:l.channel.slug,name:l.channel.username,pic:l.channel.profile_pic,live:true,viewers:l.viewer_count,title:l.title,category:l.category?.slug,wins:[]});
+  }catch{}
+}
+async function refresh(){
+  $("#status").innerHTML=`<span class="spin"></span> מתעדכן מקיק…`;
+  await discover();
+  const res=await Promise.allSettled([...streams.keys()].map(loadStreamer));
+  if(res.some(r=>r.status==="fulfilled")){source="live";updated=new Date().toISOString()}
+  render();
+}
+
+// ================= render =================
+function voteHTML(c){const v=votes[c.id]||0;return `<div class="vote ${v>0?"up":v<0?"down":""}" data-id="${esc(c.id)}">
+  <button class="u" data-vote="1" aria-label="למעלה">▲</button><div class="sc">${score(c)}</div><button class="d" data-vote="-1" aria-label="למטה">▼</button></div>`}
+function metaHTML(c){const s=streams.get(c.channel)||{name:c.channel};return `
+  <span class="st" data-st="${esc(c.channel)}"><img src="${esc(s.pic||av(s.name))}" alt="">${esc(s.name)}</span>
+  <span>· ${ago(c.at)}</span><span>· 👁 ${c.views} צפיות</span>${c.creator?`<span>· קליפ של ${esc(c.creator)}</span>`:""}`}
+function render(){
+  const st=[...streams.values()];
+  let list=[...clips.values()];
+  if(hideBots) list=list.filter(c=>!isBot(c));
+  if(sort==="top"&&range==="24") list=list.filter(c=>hrs(c.at)<24);
+  const counts={}; list.forEach(c=>counts[c.channel]=(counts[c.channel]||0)+1);
+  if(only) list=list.filter(c=>c.channel===only);
+  const cmp={hot:(a,b)=>hot(b)-hot(a), new:(a,b)=>b.at.localeCompare(a.at), top:(a,b)=>score(b)-score(a)||b.views-a.views||b.at.localeCompare(a.at)}[sort];
+  list.sort(cmp);
+
+  $("#feed").innerHTML = (only?`<div class="empty" style="padding:12px;margin-bottom:8px;text-align:right">מציג רק את <b>${esc(streams.get(only)?.name||only)}</b> · <a href="#" data-clear style="color:var(--pink)">הצג את כולם</a></div>`:"") +
+   (list.length? list.map(c=>`
+    <article class="post">
+      ${voteHTML(c)}
+      <div class="th" data-open="${esc(c.id)}"><img loading="lazy" src="${esc(c.thumb)}" alt=""><span class="du">${fmtDur(c.dur)}</span><span class="pl">▶</span></div>
+      <div class="body">
+        <div class="title" data-open="${esc(c.id)}">${esc(c.title||"ללא כותרת")}${c.cat===GTA?`<span class="flair">GTA VI</span>`:""}${isBot(c)?`<span class="flair bot">אוטומטי</span>`:""}</div>
+        <div class="meta">${metaHTML(c)}</div>
+        <div class="acts"><button data-open="${esc(c.id)}">▶ צפייה</button><button data-share="${esc(c.id)}">🔗 שיתוף</button>
+          <a href="https://kick.com/${esc(c.channel)}/clips/${esc(c.id)}" target="_blank" rel="noopener">↗ בקיק</a></div>
+      </div>
+    </article>`).join("") : `<div class="empty">אין עדיין קליפים כאן. GTA 6 יצא רק עכשיו, תחזרו עוד מעט 🌴</div>`);
+
+  const playing=st.filter(s=>s.live&&(s.category===GTA||RX.test(s.title))).sort((a,b)=>b.viewers-a.viewers);
+  $("#live").innerHTML = playing.length? playing.map(s=>`
+    <a class="lv" href="https://kick.com/${esc(s.slug)}" target="_blank" rel="noopener"><img src="${esc(s.pic||av(s.name))}" alt="">
+      <div style="min-width:0"><div class="n">${esc(s.name)}</div><div class="t">${esc(s.title)}</div></div>
+      <span class="c">● ${s.viewers.toLocaleString("he-IL")}</span></a>`).join("") : `<div class="note">אף אחד לא משחק כרגע.</div>`;
+
+  $("#streamers").innerHTML = st.sort((a,b)=>(counts[b.slug]||0)-(counts[a.slug]||0)).map(s=>`
+    <div class="sr ${only===s.slug?"on":""}" data-st="${esc(s.slug)}"><img src="${esc(s.pic||av(s.name))}" alt="">${esc(s.name)}${s.live?` <span class="dot" style="width:6px;height:6px"></span>`:""}<span class="k">${counts[s.slug]||0}</span></div>`).join("");
+
+  $("#status").innerHTML = source==="live"?`🟢 חי מקיק · ${clips.size} קליפים · ${streams.size} סטרימרים`:`${source==="site"?"🟢 עודכן":"📦 תמונת מצב"} · ${new Date(updated).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}`;
+  $("#hideBots").checked=hideBots;
+  if(openId) renderModalHead();
+}
+
+// ================= post view =================
+let hls=null, openId=null;
+function renderModalHead(){
+  const c=clips.get(openId); if(!c) return;
+  $("#mVote").outerHTML=voteHTML(c).replace('class="vote','id="mVote" class="vote');
+  $("#mTitle").innerHTML=esc(c.title||"ללא כותרת")+(c.cat===GTA?`<span class="flair">GTA VI</span>`:"");
+  $("#mMeta").innerHTML=metaHTML(c);
+  $("#mActs").innerHTML=`<button data-share="${esc(c.id)}">🔗 העתק קישור</button><a href="https://kick.com/${esc(c.channel)}/clips/${esc(c.id)}" target="_blank" rel="noopener">↗ פתח בקיק</a>`;
+}
+function openClip(id,push=true){
+  const c=clips.get(id); if(!c) return; openId=id; renderModalHead();
+  const v=$("#vid"); if(hls){hls.destroy();hls=null}
+  if(window.Hls&&Hls.isSupported()){hls=new Hls();hls.loadSource(c.video);hls.attachMedia(v)} else v.src=c.video;
+  $("#modal").classList.add("on"); v.play().catch(()=>{});
+  if(push&&location.hash!=="#"+id) history.replaceState(null,"","#"+id);
+}
+function closeClip(){openId=null;const v=$("#vid");v.pause();if(hls){hls.destroy();hls=null}v.removeAttribute("src");$("#modal").classList.remove("on");if(location.hash)history.replaceState(null,"",location.pathname+location.search)}
+
+// ================= events =================
+document.addEventListener("click",e=>{
+  const t=e.target;
+  const vb=t.closest("[data-vote]"); if(vb){const id=vb.closest(".vote").dataset.id,v=+vb.dataset.vote;votes[id]=votes[id]===v?0:v;if(!votes[id])delete votes[id];store.set("vf_votes",votes);return render()}
+  const op=t.closest("[data-open]"); if(op) return openClip(op.dataset.open);
+  const sh=t.closest("[data-share]"); if(sh){const u=location.href.split("#")[0]+"#"+sh.dataset.share;navigator.clipboard?.writeText(u).then(()=>toast("הקישור הועתק"),()=>toast(u));return}
+  const sr=t.closest("[data-st]"); if(sr){only=only===sr.dataset.st?null:sr.dataset.st;closeClip();window.scrollTo({top:0});return render()}
+  if(t.closest("[data-clear]")){e.preventDefault();only=null;return render()}
+  const tb=t.closest("#tabs button"); if(tb){sort=tb.dataset.v;document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b===tb));$("#range").classList.toggle("show",sort==="top");return render()}
+  const rb=t.closest("#range button"); if(rb){range=rb.dataset.v;document.querySelectorAll("#range button").forEach(b=>b.classList.toggle("on",b===rb));return render()}
+  if(t.id==="modal"||t.id==="mClose") return closeClip();
+  if(t.closest("#home")){only=null;closeClip();render()}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeClip()});
+$("#hideBots").onchange=e=>{hideBots=e.target.checked;store.set("vf_hidebots",hideBots);render()};
+$("#addForm").addEventListener("submit",async e=>{
+  e.preventDefault();const slug=$("#addInput").value.trim().toLowerCase().replace(/^.*kick\.com\//,"").replace(/[\/?#].*$/,"");
+  if(!slug) return; $("#addInput").value=""; toast("בודק את "+slug+"…");
+  try{const s=await loadStreamer(slug);const ex=store.get("vf_extra",[]);if(!ex.includes(s.slug)){ex.push(s.slug);store.set("vf_extra",ex)}
+    source="live";render();const n=[...clips.values()].filter(c=>c.channel===s.slug).length;toast(n?`נוספו ${n} קליפים של ${s.name}`:`${s.name} נוסף, אבל אין לו קליפים מ-GTA 6`)}
+  catch{toast(`לא מצאתי ערוץ בשם "${slug}"`)}
+});
+window.addEventListener("hashchange",()=>{const id=location.hash.slice(1);if(id&&clips.has(id))openClip(id,false)});
+
+// Data collected every 15 min by the GitHub Action (data.json), plus the list of known streamers.
+async function loadSiteData(){
+  try{const d=await getJSON("data.json?"+Date.now());applyData(d);updated=d.g;source="site"}catch{}
+  try{for(const slug of await getJSON("streamers.json?"+Date.now())) if(!streams.has(slug)) streams.set(slug,{slug,name:slug,pic:"",viewers:0,title:"",category:"",live:false,wins:[]})}catch{}
+}
+render();
+if(location.hash.length>1&&clips.has(location.hash.slice(1))) openClip(location.hash.slice(1),false);
+loadSiteData().then(()=>{render();return refresh()}).then(()=>{if(location.hash.length>1&&!openId&&clips.has(location.hash.slice(1)))openClip(location.hash.slice(1),false)});
+setInterval(refresh,3*60*1000);
+</script>
+</body>
+</html>
