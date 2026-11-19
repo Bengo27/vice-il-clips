@@ -1,8 +1,8 @@
 name: Update clips & deploy
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  # schedule:            # turned off for now: Kick blocks requests from GitHub's servers
+  #   - cron: "*/15 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
